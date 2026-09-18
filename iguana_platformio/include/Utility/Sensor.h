@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Arduino.h>
 #include <Adafruit_AS7341.h>
 
@@ -51,6 +53,8 @@ public:
     Color_Sensor(int ATIME_in, int ASTEP_in, double gain_in);
     Color_Sensor();
 
+    void begin();
+
     void gatherData();
 
     const Data& getReadings();
@@ -65,6 +69,53 @@ private:
     int ATIME;
     int ASTEP;
     Adafruit_AS7341 sensor;
+    double gain;
+    Data readings;
+
+
+};
+
+
+class Light_Sensor {
+public:
+    struct Data {
+        double value;
+
+        String toString() const {
+            return "Value: " + String(value);
+        }
+        
+        Data(double v) : value(v){}
+
+        Data() : Data(0) {}
+
+        bool operator==(const Data& other) const {
+            const double eps = 1e-6;
+
+            return fabs(value-other.value) < eps;
+        }
+
+        bool operator!=(const Data& other) const {
+            return !(*this == other);
+        }
+    };
+
+    Light_Sensor(double gain_in);
+    Light_Sensor();
+
+    void begin();
+
+    void gatherData();
+
+    const Data& getReadings();
+
+    const Data invalid{NAN};
+
+    double getIntegrationTimeInMiliseconds();
+    
+    bool ready_to_read;
+
+private:
     double gain;
     Data readings;
 

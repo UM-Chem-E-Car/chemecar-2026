@@ -1,46 +1,58 @@
-#include "BaseProgram.h"
+#include "Core/BaseProgram.h"
 #include "ConfigVariables.h"
+#include "Core/RunVariables.h"
+#include "Utility/Logger.h"
 
 RunData RUN_DATA;
+BaseProgram::BaseProgram() {}
 
-BaseProgram::BaseProgram() : BaseProgram(Logger::instance()) {}
 
-BaseProgram::BaseProgram(Logger& logger_in) : logger(logger_in) {}
-
-void BaseProgram::hardware_setup_impl(){
-    logger.log("Program Start");
-    pinMode(RELAY_PIN, OUTPUT);
-    pinMode(VALVE_PIN, INPUT);     
-    logger.log("Hardware Setup Finished");
+void BaseProgram::setup_impl(){
+    Logger::instance().log("Program Start");
 }
 
 void BaseProgram::finish(){
-    logger.log("Program Finished");
-    exit(0);
+    static bool finishedLogged = false;
+    if (!finishedLogged){
+        Logger::instance().log("Program Finished");
+        finishedLogged = true;
+    }
+    switch (CONFIG::RUNTIME::EXIT_BEHAVIOR){
+        case CONFIG::RUNTIME::DELAY:
+            delay(1000000);
+        case CONFIG::RUNTIME::LOOP:
+            return;
+        case CONFIG::RUNTIME::EXIT:
+            delay(100);
+            exit(0);
+    }
 }
 
-bool BaseProgram::wait_for_valve_open(){
-    if (analogRead(VALVE_PIN) <= VALVE_PIN_INPUT_LIMIT) {
-        return false;
-    }
-    delay(5);
-    if (analogRead(VALVE_PIN) <= VALVE_PIN_INPUT_LIMIT) {
-        return false;
-    }
+// bool BaseProgram::wait_for_valve_open(){
+//     logger.log("Waiting For Valve Open");
+//     if (analogRead(VALVE_PIN) <= VALVE_PIN_INPUT_LIMIT) {
+//         return false;
+//     }
+//     delay(5);
+//     if (analogRead(VALVE_PIN) <= VALVE_PIN_INPUT_LIMIT) {
+//         return false;
+//     }
 
-    logger.log("Valve Opened");
-    logger.log(CONFIG.LOGGING.FIELDS, Logger::LogType::HEADER);
+//     logger.log("Valve Opened");
+//     logger.log(CONFIG::LOGGING::FIELDS, Logger::LogType::HEADER);
 
-    return true;
-}
+//     return true;
+// }
 
 
-void BaseProgram::spin_once() {
-    background_tasks();
+void BaseProgram::loop_impl() {
+    spin_once();
     if (RUN_DATA.stage == RunData::WAITING_FOR_VALVE_OPEN){
         bool valve_opened = wait_for_valve_open(); 
-        if (valve_opened)
+        if (valve_opened){
+            collect_initial_data();
             RUN_DATA.stage = RunData::RECORDING_DATA;
+        }
         else
             return;
     } 
@@ -68,5 +80,6 @@ void BaseProgram::spin_once() {
 
     finish();
 }
+
 
 
