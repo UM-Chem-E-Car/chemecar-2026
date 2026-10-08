@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
-#include "Utility/Logger.h"
 #include "Utility/Sensor.h"
 #include "Utility/Filter.h"
 #include "Core/BaseProgram.h"
@@ -8,7 +7,7 @@
 
 class RunProgram : public BaseProgram {
 public:
-    RunProgram() : BaseProgram(), sensor(CONFIG::ALGOS::SensorType()), run_data(RunData()){}
+    RunProgram() : BaseProgram(Logger::instance()), sensor(Color_Sensor()), run_data(RunData()){}
 
     void setup_impl() override {
         //Hardware Setup
@@ -43,16 +42,11 @@ public:
         return true;
     }
 
-    void collect_initial_data() override {
-        rxnOver.setInitialValues(&sensor.getReadings().value);
-    }
-
-
     bool collect_and_check_data() override {
         if (sensor.ready_to_read == false)
             return false;
         
-        CONFIG::ALGOS::SensorDataType data = sensor.getReadings();
+        Color_Sensor::Data data = sensor.getReadings();
 
         // double value = data.r/data.o;
         // double avg_value = valueFilter.newAverage(value);
@@ -63,7 +57,16 @@ public:
 
         const double printarr[] = {
             millis() - run_data.valve_open_time, 
-            data.value,
+            data.v, 
+            data.b, 
+            data.c, 
+            data.g, 
+            data.gy, 
+            data.y, 
+            data.o, 
+            data.r, 
+            data.cl, 
+            data.nir, 
             // value, 
             // avg_value, 
             // delta_value, 
@@ -75,6 +78,20 @@ public:
         
 
         return rxnOver.verifyReactionDone(data, run_data.currentTime());
+
+        if (CONFIG::RUNTIME::SLOPE_GRACE_PERIOD > run_data.currentTime()){
+            return false;
+        }
+
+        // if (abs(avg_delta_value) < CONFIG::REACTION::TRIGGER_VALUE){
+        //     run_data.triggers_hit++;
+        //     if (run_data.triggers_hit >= CONFIG::REACTION::TRIGGER_COUNT){
+        //         run_data.time_reaction_end = run_data.currentTime();
+        //         run_data.reaction_value = value;
+        //         return true;
+        //     }
+        // }
+        return false;
     }
 
     void calculate_car_run_time() override {
@@ -99,9 +116,7 @@ public:
     }
 
 protected:
-    Logger& logger = Logger::instance();
-
-    CONFIG::ALGOS::SensorType sensor;
+    Color_Sensor sensor;
     Filter valueFilter;
     Filter derFilter;
     DDx derivative;

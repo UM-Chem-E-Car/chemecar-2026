@@ -2,14 +2,14 @@
 
 //DEFINE YOUR ALGOS IN GLOBAL NAMESPACE
 #include "AlgoInterfaces/RxnOver_Photoresistor.h"
-#include "AlgoInterfaces/CalcDist_Interpolate.h"
+#include "AlgoInterfaces/CalcDist_Linear.h"
 #include "AlgoInterfaces/TimeRun_Linear.h"
 
 #include "Utility/Sensor.h"
 
 #define VALVE_PIN A0
-#define RELAY_PIN 8
-#define VALVE_PIN_INPUT_LIMIT 100
+#define RELAY_PIN 2
+#define VALVE_PIN_INPUT_LIMIT 50
 
 namespace CONFIG {
 
@@ -35,13 +35,12 @@ namespace CONFIG {
     };
     
     namespace ALGOS {
-        using SensorType = Light_Sensor;
 
         using SensorDataType = Light_Sensor::Data;
         using ReactionOverAlgorithm = RxnOver_Photoresistor;
         
-        using ReactionSummaryDataType = ValueDiff;
-        using CalcDistAlgorithm = CalcDist_Interpolate;
+        using ReactionSummaryDataType = TimeData;
+        using CalcDistAlgorithm = CalcDist_Linear;
 
         using TimeRunAlgorithm = TimeRun_Linear;
 
@@ -55,18 +54,18 @@ namespace CONFIG {
             CSV
         };
         
-        constexpr LogMode LOGMODE = MAIN;
+        constexpr LogMode LOGMODE = CSV;
         constexpr int SERIAL_PORT = 9600;
 
         constexpr int CSV_DECIMALS = 5;
 
         constexpr double PRINT_END_CHAR = -293482;
-        constexpr const char* FIELDS = "Time, Value";//, Value, Average Value, Delta, Average Delta";
+        constexpr const char* FIELDS = "Time, v, b, c, g, gy, y, o, r, cl, nir";//, Value, Average Value, Delta, Average Delta";
     };
 
     namespace TESTING {
-        constexpr unsigned long STOPPING_END_TEST_TIME = 90000UL;
-        constexpr unsigned long BATTERY_SIMULATED_END_TIME = 54300UL;
+        constexpr unsigned long STOPPING_END_TEST_TIME = 60000UL;
+        constexpr unsigned long BATTERY_SIMULATED_END_TIME = 25000UL;
         constexpr int BATTERY_SIMULATED_VALUE = 0;
     }
 
