@@ -6,8 +6,8 @@ class BatteryTestProgram : public RunProgram {
     }
 
     void calculate_car_run_time() override {
-        TimeData simulatedReaction;
-        simulatedReaction.time_reaction_end = CONFIG::TESTING::BATTERY_SIMULATED_END_TIME;
+        ValueDiff simulatedReaction;
+        simulatedReaction.diff = CONFIG::TESTING::BATTERY_SIMULATED_END_TIME;
 
         calcDist.calculate(simulatedReaction);
         timeRun.calculate(calcDist.getDistance());
